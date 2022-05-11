@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
         password: [root]
         node: [14.x]
     steps:
@@ -29,7 +29,7 @@ jobs:
       - name: Start MySQL service
         run: sudo systemctl start mysql.service
       - name: Fix MySQL Password
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04' || matrix.os == 'ubuntu-22.04'
         run: |
           echo "ALTER USER root@localhost IDENTIFIED WITH mysql_native_password BY '${{ matrix.password }}';" >> tmp.sql
           mysql -u root -proot < tmp.sql
@@ -39,6 +39,9 @@ jobs:
           yarn install --frozen-lockfile
           cd packages/ghost-cli
           sudo yarn link --link-folder /usr/bin/
+      - name: Fix Unreadable Runner Directory
+        if: matrix.os == 'ubuntu-22.04'
+        run: chmod +r /home/runner
       - name: Setting up Ghost instance
         run: |
           ghost install \
